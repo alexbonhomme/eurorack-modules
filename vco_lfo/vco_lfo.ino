@@ -1247,84 +1247,54 @@ int LED = 0;
 byte LFO = 10;
 byte range = 0; // 0=LFO,1=Tempo,2=Low,3=Mid,4=High
 int freq_pot, CV, old_range;
-int SW = 0; // toggle sw
 long timer = 0;
 
-int buttonState;
-int lastButtonState = HIGH;
-
-// the following variables are unsigned longs because the time, measured in
-// milliseconds, will quickly become a bigger number than can be stored in an int.
-unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
-
-
-void readSWButton()
+/**
+ *
+ */
+void selectWaveform()
 {
-  // read the state of the switch into a local variable:
-  int reading = digitalRead(2);
+  int SW_A = digitalRead(2);
+  int SW_B = digitalRead(3);
 
-  // check to see if you just pressed the button
-  // (i.e. the input went from LOW to HIGH), and you've waited long enough
-  // since the last press to ignore any noise:
-
-  // If the switch changed, due to noise or pressing:
-  if (reading != lastButtonState) {
-    // reset the debouncing timer
-    lastDebounceTime = millis();
+  if (SW_A == 1 && SW_B == 0)
+  {
+    waveType = SQUARE;
+    pinMode(6, OUTPUT);
+    digitalWrite(6, LOW);
   }
-
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    // whatever the reading is at, it's been there for longer than the debounce
-    // delay, so take it as the actual current state:
-
-    // if the button state has changed:
-    if (reading != buttonState) {
-      buttonState = reading;
-
-      if (buttonState == LOW)
-      { 
-        lastButtonState = buttonState;
-        SW = (SW + 1) % 3;
-
-        //------------------select waveform----------------
-        if (SW == 0)
-        {
-          waveType = SINE;
-          pinMode(6, INPUT);
-          digitalWrite(3, LOW);
-          digitalWrite(4, LOW);
-        }
-        else if (SW == 1)
-        {
-          waveType = TRIANGLE;
-          pinMode(6, INPUT);
-          digitalWrite(3, LOW);
-          digitalWrite(4, HIGH);
-        }
-        else if (SW == 2)
-        {
-          waveType = SQUARE;
-          pinMode(6, OUTPUT);
-          digitalWrite(6, LOW);
-          digitalWrite(3, HIGH);
-          digitalWrite(4, HIGH);
-        }
-      }
-    }
+  else if (SW_A == 0 && SW_B == 1)
+  {
+    waveType = TRIANGLE;
+    pinMode(6, INPUT);
   }
+  else if (SW_A == 1 && SW_B == 1)
+  {
+    waveType = SINE;
+    pinMode(6, INPUT);
+  }
+}
 
-  // save the reading. Next time through the loop, it'll be the lastButtonState:
-  lastButtonState = reading;
+/**
+ *
+ */
+void selectFreqRange()
+{
+  old_range = range;
+  range = map(analogRead(2), 0, 1024, 0, 5);
+
+  if (old_range <= 1 && range >= 2)
+  {
+    analogWrite(9, 0); // when use as OSC , LED OFF.Countermeasure of LED PWM noise.
+  }
 }
 
 void setup()
 {
   pinMode(2, INPUT_PULLUP); // SW
+  pinMode(3, INPUT_PULLUP); // SW
   pinMode(6, INPUT);        // SQUARE resistance
   pinMode(9, OUTPUT);       // LED output
-  pinMode(3, OUTPUT);       // LED output
-  pinMode(4, OUTPUT);       // LED output
 
   timer = millis();
 
@@ -1334,23 +1304,14 @@ void setup()
   delay(100);
   WriteRegister(0x2100);
   delay(100);
-
-  Serial.begin(9600);
 }
 
 void loop()
 {
-  readSWButton();
-  
   if (timer + 500 <= millis())
   {
-    //------------------select frequency range----------------
-    old_range = range;
-    range = map(analogRead(2), 0, 1024, 0, 5);
-    if (old_range <= 1 && range >= 2)
-    {
-      analogWrite(9, 0); // when use as OSC , LED OFF.Countermeasure of LED PWM noise.
-    }
+    selectFreqRange();
+    selectWaveform();
 
     timer = millis();
   }
