@@ -54,21 +54,18 @@ void setup()
 
   SPI.begin();
   MIDI.begin(MIDI_CHANNEL_OMNI);
-
-  // Set initial pitch bend voltage to 0.5V (mid point).  With Gain = 1X, this is 1023
-  // Other DAC outputs will come up as 0V, so don't need to be initialized
-  //setVoltage(DAC2, 0, 0, 1023);
 }
 
 bool notes[2][88] = {0};
 int8_t noteOrder[2][20] = {0};
 int8_t orderIndex[2] = {0};
 
+unsigned long clock_timer = 0, clock_timeout = 0;
+unsigned int clock_count = 0;
+
 void loop()
 {
   int type, noteMsg, channel, channelNum, d1, d2;
-  static unsigned long clock_timer = 0, clock_timeout = 0;
-  static unsigned int clock_count = 0;
 
   if ((clock_timer > 0) && (millis() - clock_timer > 20))
   {
@@ -105,36 +102,35 @@ void loop()
       break;
 
     case midi::Clock:
-      if (millis() > clock_timeout + 300) 
-      {
-        clock_count = 0; // Prevents Clock from starting in between quarter notes after clock is restarted!
-      }
-      
-      clock_timeout = millis();
-
-      if (clock_count == 0)
-      {
-        digitalWrite(CLOCK, HIGH); // Start clock pulse
-        clock_timer = millis();
-      }
-      
-      clock_count++;
-      
-      if (clock_count == 24)
-      { // MIDI timing clock sends 24 pulses per quarter note.  Sent pulse only once every 24 pulses
-        clock_count = 0;
-      }
+      handleClock();
       
       break;
 
-    case midi::ActiveSensing:
-      break;
 
     default:
-      d1 = MIDI.getData1();
-      d2 = MIDI.getData2();
+      break;
     }
   }
+}
+
+void handleClock()
+{
+    if (millis() > clock_timeout + 300)
+    {
+      clock_count = 0; // Prevents Clock from starting in between quarter notes after clock is restarted!
+    }
+
+    clock_timeout = millis();
+
+    if (clock_count == 0) {
+      digitalWrite(CLOCK,HIGH); // Start clock pulse
+      clock_timer = millis();
+    }
+
+    clock_count++;
+    if (clock_count == 24) {  // MIDI timing clock sends 24 pulses per quarter note. Sent pulse only once every 24 pulses
+      clock_count = 0;
+    }
 }
 
 bool commandVelocity(int type, int channelNum)
@@ -257,10 +253,10 @@ void commandLastNote(int channelNum)
 
 void commandNote(int noteMsg, int channelNum)
 {
-  digitalWrite(channelNum == 0 ? GATE1 : GATE2, HIGH);
-
   unsigned int mV = (unsigned int)((float)noteMsg * NOTE_SF + 0.5);
   setVoltage(channelNum == 0 ? DAC1 : DAC2, 0, 1, mV); // DAC1 or DAC2, channel 0, gain = 2X
+
+  digitalWrite(channelNum == 0 ? GATE1 : GATE2, HIGH);
 }
 
 // setVoltage -- Set DAC voltage output
