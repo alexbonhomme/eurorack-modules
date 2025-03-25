@@ -6,13 +6,17 @@
 #include <Adafruit_MCP4728.h>
 #include <Wire.h>
 
-#define GATE 2
-#define SLIDE 3
-#define ACCENT 4
-#define CLOCK 5
+#define GATE 8
+#define SLIDE 9
+#define ACCENT 10
+// #define GATE_2 11
+#define CLOCK 12
 
 #define MIDI_CH1 1
 #define MIDI_CH2 2
+
+#define CC_1 70
+#define CC_2 71
 
 #define PPQN_CLOCK 24 // Clock resolution
 
@@ -47,10 +51,11 @@ void setup()
 
   mcp.begin();
 
-  MIDI.turnThruOff();                   // Thru off disconnected
-  MIDI.setHandleNoteOn(handleNoteOn);   // Handle for NoteOn
-  MIDI.setHandleNoteOff(handleNoteOff); // Handle for NoteOff
+  MIDI.turnThruOff();
+  MIDI.setHandleNoteOn(handleNoteOn);
+  MIDI.setHandleNoteOff(handleNoteOff);
   MIDI.setHandleClock(handleClock);
+  MIDI.setHandleControlChange(handleControlChange);
 
   MIDI.begin(MIDI_CHANNEL_OMNI);
 }
@@ -86,6 +91,7 @@ byte processNote(byte note)
   return val;
 }
 
+// @todo handle channel 2 (gate, etc.)
 void handleNoteOn(byte channel, byte pitch, byte velocity)
 {
   if (!isActiveChannel(channel))
@@ -100,15 +106,12 @@ void handleNoteOn(byte channel, byte pitch, byte velocity)
     return;
   }
 
-  // @todo
-  // dac_channel = MIDI_CH1 == channel ? 0 : 1;
-
   byte note = processNote(pitch);
 
   note_count++;
 
   // CV
-  commandNote(note);
+  commandNote(channel, note);
 
   // Gate
   digitalWrite(GATE, HIGH);
@@ -130,6 +133,7 @@ void handleNoteOn(byte channel, byte pitch, byte velocity)
   }
 }
 
+// @todo handle channel 2 (gate, etc.)
 void handleNoteOff(byte channel, byte pitch, byte velocity)
 {
   if (!isActiveChannel(channel))
@@ -165,6 +169,8 @@ void handleClock(void)
   if (clock_count < PPQN_CLOCK)
   {
     clock_count++;
+
+    digitalWrite(CLOCK, LOW);
   }
   else
   {
@@ -175,10 +181,35 @@ void handleClock(void)
   }
 }
 
-// @todo multi channel
-void commandNote(int note)
+void handleControlChange(byte channel, byte number, byte value)
 {
-  long mV = pgm_read_dword_near(cv + note);
+  if (!isActiveChannel(channel))
+  {
+    return;
+  }
 
-  mcp.setChannelValue(MCP4728_CHANNEL_A, mV, MCP4728_VREF_INTERNAL, MCP4728_GAIN_2X);
+  if (number == CC_1 || number == CC_2)
+  {
+    commandCC(number, value);
+  }
+}
+
+/**
+ * @brief Send CV to DAC
+ */
+void commandNote(byte channel, byte note)
+{
+  uint16_t mV = pgm_read_dword_near(cv + note);
+
+  mcp.setChannelValue(channel == MIDI_CH1 ? MCP4728_CHANNEL_C : MCP4728_CHANNEL_D, mV, MCP4728_VREF_INTERNAL, MCP4728_GAIN_2X);
+}
+
+/**
+ * @brief Send CC to DAC
+ */
+void commandCC(byte number, byte value)
+{
+  uint16_t mV = map(value, 0, 127, 0, 4095);
+
+  mcp.setChannelValue(number == CC_1 ? MCP4728_CHANNEL_A : MCP4728_CHANNEL_B, mV, MCP4728_VREF_INTERNAL, MCP4728_GAIN_2X);
 }
