@@ -22,7 +22,7 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 Adafruit_MCP4728 mcp;
 
 // V/OCT LSB for DAC
-const PROGMEM long cv[121] = {
+const long cv[121] = {
     0, 34, 68, 102, 137, 171, 205, 239, 273, 307, 341, 375, 410,
     444, 478, 512, 546, 580, 614, 648, 683, 717, 751, 785, 819,
     853, 887, 921, 956, 990, 1024, 1058, 1092, 1126, 1160, 1194, 1229,
@@ -43,19 +43,22 @@ int dac_channel, note_count_ch1 = 0;
  */
 void setup()
 {
-  pinMode(CLOCK, OUTPUT);
-  pinMode(GATE_1, OUTPUT);
-  pinMode(SLIDE, OUTPUT);
-  pinMode(ACCENT, OUTPUT);
-  pinMode(GATE_2, OUTPUT);
+  // Set pins as outputs using DDRx
+  DDRB |= (1 << PB0); // GATE_1 (Pin 8)
+  DDRB |= (1 << PB1); // SLIDE (Pin 9)
+  DDRB |= (1 << PB2); // ACCENT (Pin 10)
+  DDRB |= (1 << PB3); // GATE_2 (Pin 11)
+  DDRB |= (1 << PB4); // CLOCK (Pin 12)
 
-  digitalWrite(CLOCK, LOW);
-  digitalWrite(GATE_1, LOW);
-  digitalWrite(SLIDE, LOW);
-  digitalWrite(ACCENT, LOW);
-  digitalWrite(GATE_2, LOW);
+  // Set initial states to LOW using PORTx
+  PORTB &= ~(1 << PB0); // GATE_1 LOW
+  PORTB &= ~(1 << PB1); // SLIDE LOW
+  PORTB &= ~(1 << PB2); // ACCENT LOW
+  PORTB &= ~(1 << PB3); // GATE_2 LOW
+  PORTB &= ~(1 << PB4); // CLOCK LOW
 
   mcp.begin();
+  Wire.setClock(400000L);
 
   MIDI.turnThruOff();
   MIDI.setHandleNoteOn(handleNoteOn);
@@ -81,7 +84,6 @@ void handleNoteOn(byte channel, byte pitch, byte velocity)
 {
   if (velocity == 0)
   {
-    // This acts like a NoteOff.
     handleNoteOff(channel, pitch);
     return;
   }
@@ -93,16 +95,23 @@ void handleNoteOn(byte channel, byte pitch, byte velocity)
     // CV
     commandNote(channel, pitch);
 
-    // Gate
-    digitalWrite(GATE_1, HIGH);
+    // Gate HIGH
+    PORTB |= (1 << PB0); // GATE_1 HIGH
 
     // Accent
-    digitalWrite(ACCENT, velocity > 80 ? HIGH : LOW);
+    if (velocity > 80)
+    {
+      PORTB |= (1 << PB2); // ACCENT HIGH
+    }
+    else
+    {
+      PORTB &= ~(1 << PB2); // ACCENT LOW
+    }
 
     // Slide
     if (note_count_ch1 > 1)
     {
-      digitalWrite(SLIDE, HIGH);
+      PORTB |= (1 << PB1); // SLIDE HIGH
     }
   }
 
@@ -111,8 +120,8 @@ void handleNoteOn(byte channel, byte pitch, byte velocity)
     // CV
     commandNote(channel, pitch);
 
-    // Gate
-    digitalWrite(GATE_2, HIGH);
+    // Gate HIGH
+    PORTB |= (1 << PB3); // GATE_2 HIGH
   }
 }
 
@@ -132,21 +141,21 @@ void handleNoteOff(byte channel, byte pitch)
 
     if (note_count_ch1 == 0)
     {
-      // Gate
-      digitalWrite(GATE_1, LOW);
+      // Gate LOW
+      PORTB &= ~(1 << PB0); // GATE_1 LOW
 
-      // Accent
-      digitalWrite(ACCENT, LOW);
+      // Accent LOW
+      PORTB &= ~(1 << PB2); // ACCENT LOW
 
-      // Slide
-      digitalWrite(SLIDE, LOW);
+      // Slide LOW
+      PORTB &= ~(1 << PB1); // SLIDE LOW
     }
   }
 
   if (channel == MIDI_CH2)
   {
-    // Gate
-    digitalWrite(GATE_2, LOW);
+    // Gate LOW
+    PORTB &= ~(1 << PB3); // GATE_2 LOW
   }
 }
 
@@ -155,7 +164,6 @@ void handleNoteOff(byte channel, byte pitch)
  */
 void handleClock(void)
 {
-  // Clock out everytime receives clock in normal mode
   if (clock_count < PPQN_CLOCK)
   {
     clock_count++;
@@ -164,7 +172,8 @@ void handleClock(void)
     {
       clock_on = false;
 
-      digitalWrite(CLOCK, LOW);
+      // CLOCK LOW
+      PORTB &= ~(1 << PB4); // CLOCK LOW
     }
   }
   else
@@ -172,7 +181,8 @@ void handleClock(void)
     clock_count = 1;
     clock_on = true;
 
-    digitalWrite(CLOCK, HIGH);
+    // CLOCK HIGH
+    PORTB |= (1 << PB4); // CLOCK HIGH
   }
 }
 
@@ -226,7 +236,7 @@ byte processNote(byte note)
 void commandNote(byte channel, byte pitch)
 {
   byte note = processNote(pitch);
-  uint16_t mV = pgm_read_dword_near(cv + note);
+  uint16_t mV = cv[note];
 
   mcp.setChannelValue(channel == MIDI_CH1 ? MCP4728_CHANNEL_C : MCP4728_CHANNEL_D, mV, MCP4728_VREF_INTERNAL, MCP4728_GAIN_2X);
 }
