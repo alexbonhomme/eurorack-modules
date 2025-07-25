@@ -38,6 +38,8 @@ bool clock_on = false;
 int clock_count = 1;
 int dac_channel, note_count_ch1 = 0;
 
+volatile bool clock_pulse = false;
+
 /**
  *
  */
@@ -164,25 +166,18 @@ void handleNoteOff(byte channel, byte pitch)
  */
 void handleClock(void)
 {
-  if (clock_count < PPQN_CLOCK)
+  clock_count++;
+
+  if (clock_count >= PPQN_CLOCK)
   {
-    clock_count++;
-
-    if (clock_on)
-    {
-      clock_on = false;
-
-      // CLOCK LOW
-      PORTB &= ~(1 << PB4); // CLOCK LOW
-    }
-  }
-  else
-  {
-    clock_count = 1;
-    clock_on = true;
-
-    // CLOCK HIGH
     PORTB |= (1 << PB4); // CLOCK HIGH
+    clock_pulse = true;
+    clock_count = 0;
+  }
+  else if (clock_count == 2)
+  {
+    PORTB &= ~(1 << PB4); // CLOCK LOW
+    clock_pulse = false;
   }
 }
 
