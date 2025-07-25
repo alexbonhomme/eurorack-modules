@@ -35,10 +35,12 @@ const long cv[121] = {
     3720, 3754, 3788, 3822, 3856, 3890, 3924, 3959, 3993, 4027, 4061, 4095};
 
 bool clock_on = false;
-int clock_count = 1;
+int clock_count = 0; // Start at 0, not 1
 int dac_channel, note_count_ch1 = 0;
 
 volatile bool clock_pulse = false;
+volatile unsigned long clock_pulse_start = 0;
+const unsigned int CLOCK_PULSE_WIDTH_US = 2000; // 2ms pulse width
 
 /**
  *
@@ -66,6 +68,9 @@ void setup()
   MIDI.setHandleNoteOn(handleNoteOn);
   MIDI.setHandleNoteOff(handleNoteOff);
   MIDI.setHandleClock(handleClock);
+  MIDI.setHandleStart(handleStart);
+  MIDI.setHandleContinue(handleContinue);
+  MIDI.setHandleStop(handleStop);
   MIDI.setHandleControlChange(handleControlChange);
 
   MIDI.begin(MIDI_CHANNEL_OMNI);
@@ -77,6 +82,13 @@ void setup()
 void loop()
 {
   MIDI.read();
+
+  // Handle clock pulse width timing
+  if (clock_pulse && (micros() - clock_pulse_start > CLOCK_PULSE_WIDTH_US))
+  {
+    PORTB &= ~(1 << PB4); // CLOCK LOW
+    clock_pulse = false;
+  }
 }
 
 /**
@@ -167,18 +179,30 @@ void handleNoteOff(byte channel, byte pitch)
 void handleClock(void)
 {
   clock_count++;
-
   if (clock_count >= PPQN_CLOCK)
   {
     PORTB |= (1 << PB4); // CLOCK HIGH
     clock_pulse = true;
+    clock_pulse_start = micros();
     clock_count = 0;
   }
-  else if (clock_count == 2)
-  {
-    PORTB &= ~(1 << PB4); // CLOCK LOW
-    clock_pulse = false;
-  }
+}
+
+void handleStart()
+{
+  clock_count = 0;
+}
+
+void handleContinue()
+{
+  clock_count = 0;
+}
+
+void handleStop()
+{
+  clock_count = 0;
+  clock_pulse = false;
+  PORTB &= ~(1 << PB4); // CLOCK LOW
 }
 
 /**
