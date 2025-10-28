@@ -40,7 +40,8 @@ int dac_channel, note_count_ch1 = 0;
 
 volatile bool clock_pulse = false;
 volatile unsigned long clock_pulse_start = 0;
-const unsigned int CLOCK_PULSE_WIDTH_US = 2000; // 2ms pulse width
+volatile bool midi_playing = false;              // Track if MIDI is playing
+const unsigned int CLOCK_PULSE_WIDTH_US = 10000; // 10ms pulse width
 
 /**
  *
@@ -86,8 +87,7 @@ void loop()
   // Handle clock pulse width timing
   if (clock_pulse && (micros() - clock_pulse_start > CLOCK_PULSE_WIDTH_US))
   {
-    PORTB &= ~(1 << PB4); // CLOCK LOW
-    clock_pulse = false;
+    setClockPulse(false);
   }
 }
 
@@ -178,31 +178,51 @@ void handleNoteOff(byte channel, byte pitch)
  */
 void handleClock(void)
 {
+  // Only process clock if MIDI is playing
+  if (!midi_playing)
+  {
+    return;
+  }
+
   clock_count++;
   if (clock_count >= PPQN_CLOCK)
   {
-    PORTB |= (1 << PB4); // CLOCK HIGH
-    clock_pulse = true;
-    clock_pulse_start = micros();
-    clock_count = 0;
+    setClockPulse(true);
   }
 }
 
 void handleStart()
 {
-  clock_count = 0;
+  midi_playing = true;
+  setClockPulse(true);
 }
 
 void handleContinue()
 {
-  clock_count = 0;
+  midi_playing = true;
+  setClockPulse(true);
 }
 
 void handleStop()
 {
-  clock_count = 0;
-  clock_pulse = false;
-  PORTB &= ~(1 << PB4); // CLOCK LOW
+  midi_playing = false;
+  setClockPulse(false);
+}
+
+void setClockPulse(bool state)
+{
+  if (state)
+  {
+    PORTB |= (1 << PB4); // CLOCK HIGH
+    clock_pulse_start = micros();
+    clock_pulse = true;
+    clock_count = 0;
+  }
+  else
+  {
+    PORTB &= ~(1 << PB4); // CLOCK LOW
+    clock_pulse = false;
+  }
 }
 
 /**
