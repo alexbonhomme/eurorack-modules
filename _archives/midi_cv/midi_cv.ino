@@ -24,8 +24,9 @@
 #define NP_SEL1 A0 // Note priority is set by pins A0 and A2
 #define NP_SEL2 A2
 
-#define GATE1 2
-#define GATE2 3
+// Gate 1 and 2 are inversed to fix a mistake during the soldering, oops
+#define GATE1 3
+#define GATE2 2
 #define CLOCK 4
 #define DAC1 8
 #define DAC2 9
@@ -151,30 +152,32 @@ bool commandVelocity(int type, int channelNum)
 
 void handleNote(int noteMsg, int channelNum)
 {
-  bool S1, S2;
-  
-  // Pins NP_SEL1 and NP_SEL2 indictate note priority
-  S1 = digitalRead(NP_SEL1);
-  S2 = digitalRead(NP_SEL2);
+//  bool S1, S2;
+//  
+//  // Pins NP_SEL1 and NP_SEL2 indictate note priority
+//  S1 = digitalRead(NP_SEL1);
+//  S2 = digitalRead(NP_SEL2);
+//
+//  if (S1 && S2)
+//  { // Highest note priority
+//    commandTopNote(channelNum);
+//  }
+//  else if (!S1 && S2)
+//  { // Lowest note priority
+//    commandBottomNote(channelNum);
+//  }
+//  else
+//  { // Last note priority
+//    if (notes[channelNum][noteMsg])
+//    { // If note is on and using last note priority, add to ordered list
+//      orderIndex[channelNum] = (orderIndex[channelNum] + 1) % 20;
+//      noteOrder[channelNum][orderIndex[channelNum]] = noteMsg;
+//    }
+//    
+//    commandLastNote(channelNum);
+//  }
 
-  if (S1 && S2)
-  { // Highest note priority
-    commandTopNote(channelNum);
-  }
-  else if (!S1 && S2)
-  { // Lowest note priority
-    commandBottomNote(channelNum);
-  }
-  else
-  { // Last note priority
-    if (notes[channelNum][noteMsg])
-    { // If note is on and using last note priority, add to ordered list
-      orderIndex[channelNum] = (orderIndex[channelNum] + 1) % 20;
-      noteOrder[channelNum][orderIndex[channelNum]] = noteMsg;
-    }
-    
-    commandLastNote(channelNum);
-  }
+  commandBottomNote(channelNum);
 }
 
 void commandTopNote(int channelNum)
