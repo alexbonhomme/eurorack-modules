@@ -6,7 +6,7 @@ import numpy as np
 # === CONFIG ===
 INPUT_FILE = "909_oh.wav"    # path to your sample
 OUTPUT_FILE = "sample_data.h"
-TARGET_SAMPLE_RATE = 22050   # Hz, to match Arduino playback rate
+TARGET_SAMPLE_RATE = 44100   # Hz, to match Arduino playback rate
 TARGET_BITS = 8              # output bit depth
 
 # === Helper functions ===
