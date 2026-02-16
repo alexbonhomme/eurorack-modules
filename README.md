@@ -9,8 +9,7 @@ Open source eurorack modules designs.
 - [Saturator (LED based soft clipping)](./saturator/README.md)
 - [Stereo Filters (Daisyseed)](./stereo_filters/README.md)
 - [MS20 Low Pass Filter (WIP)](./ms20_lpf/README.md)
-- [MIDI to CV (Raspberry Pi Pico 2 + MCP4822)](./midi_cv_pico/README.md)
-- [MIDI Controller (Teensy 2.0)](./midi_control/README.md)
+- [MIDI to CV (Raspberry Pi Pico + MCP4822)](./midi_cv_pico/README.md)
 - [Pico Drum (RP2040 Zero)](./drum_pico/README.md)
 
 ## License
