@@ -71,12 +71,34 @@ void setup()
 #ifdef DEBUG
   // Initialize serial communication for debugging
   Serial.begin(115200);
-  delay(100);
+  delay(300);
 
   Serial.println("=== MIDI to CV Converter Starting ===");
   Serial.println("Pico 2 Initialization...");
 #endif
 
+  // Initialize SPI
+  SPI.begin();
+
+  // Configure MIDI
+  MIDI.turnThruOff();
+  MIDI.setHandleNoteOn(handleNoteOn);
+  MIDI.setHandleNoteOff(handleNoteOff);
+  MIDI.setHandleClock(handleClock);
+  MIDI.setHandleStart(handleStartAndContinue);
+  MIDI.setHandleContinue(handleStartAndContinue);
+  MIDI.setHandleStop(handleStop);
+
+  MIDI.begin(MIDI_CHANNEL_OMNI);
+
+#ifdef DEBUG
+  Serial.println("=== MIDI to CV Converter - Pico 2 W Ready ===");
+  Serial.println("Waiting for MIDI input...");
+#endif
+}
+
+void setup1()
+{
   // Configure LED output pins
   pinMode(MIDI_LED, OUTPUT);
   pinMode(CLOCK_LED, OUTPUT);
@@ -84,13 +106,6 @@ void setup()
   pinMode(GATE_LED_2, OUTPUT);
   pinMode(GATE_LED_3, OUTPUT);
   pinMode(GATE_LED_4, OUTPUT);
-
-  digitalWrite(MIDI_LED, HIGH); // Turn on LED to show code is running
-  digitalWrite(CLOCK_LED, LOW);
-  digitalWrite(GATE_LED_1, LOW);
-  digitalWrite(GATE_LED_2, LOW);
-  digitalWrite(GATE_LED_3, LOW);
-  digitalWrite(GATE_LED_4, LOW);
 
   // Configure gate output pin
   pinMode(DAC1, OUTPUT);
@@ -123,27 +138,25 @@ void setup()
   digitalWrite(DAC3, HIGH);
   digitalWrite(DAC4, HIGH);
 
-  // Initialize SPI
-  SPI.begin();
-
-  // Configure MIDI
-  MIDI.turnThruOff();
-  MIDI.setHandleNoteOn(handleNoteOn);
-  MIDI.setHandleNoteOff(handleNoteOff);
-  MIDI.setHandleClock(handleClock);
-  MIDI.setHandleStart(handleStartAndContinue);
-  MIDI.setHandleContinue(handleStartAndContinue);
-  MIDI.setHandleStop(handleStop);
-
-  MIDI.begin(MIDI_CHANNEL_OMNI);
-
-#ifdef DEBUG
-  Serial.println("=== MIDI to CV Converter - Pico 2 W Ready ===");
-  Serial.println("Waiting for MIDI input...");
-#endif
-
+  // Starting LEDs animation
+  digitalWrite(CLOCK_LED, HIGH);
   delay(300);
+  digitalWrite(MIDI_LED, HIGH);
+  delay(300);
+  digitalWrite(GATE_LED_1, HIGH);
+  delay(300);
+  digitalWrite(GATE_LED_2, HIGH);
+  delay(300);
+  digitalWrite(GATE_LED_3, HIGH);
+  delay(300);
+  digitalWrite(GATE_LED_4, HIGH);
+  delay(500);
+  digitalWrite(CLOCK_LED, LOW);
   digitalWrite(MIDI_LED, LOW);
+  digitalWrite(GATE_LED_1, LOW);
+  digitalWrite(GATE_LED_2, LOW);
+  digitalWrite(GATE_LED_3, LOW);
+  digitalWrite(GATE_LED_4, LOW);
 }
 
 /**
