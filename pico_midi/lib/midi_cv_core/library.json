@@ -1,0 +1,7 @@
+{
+  "name": "midi_cv_core",
+  "version": "1.0.0",
+  "description": "Shared DAC, MIDI clock, and pin config for MIDI-CV modules",
+  "frameworks": "arduino",
+  "platforms": "*"
+}
