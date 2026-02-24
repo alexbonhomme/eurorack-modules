@@ -3,13 +3,30 @@
 
 struct ClockState {
     bool pulse         = false;
-    uint8_t count      = 0;
+    uint16_t count     = 0;
     unsigned long pulse_start = 0;
+    uint8_t divIdx     = 0; // index into kClockDivisionTicks[]
 };
 
 static bool midi_playing = false;
-static ClockState clocks[2];
+// Default divisions: Clock 1 = 1/16 (idx 0), Clock 2 = 1/4 (idx 2)
+static ClockState clocks[2] = {
+    {false, 0, 0, 0}, // Clock 1: divIdx 0 = 1/16
+    {false, 0, 0, 2}, // Clock 2: divIdx 2 = 1/4
+};
 static ClockState led_clock;
+
+void setClockDivisor(uint8_t idx, uint8_t divIdx) {
+    if (idx >= 2) return;
+    if (divIdx >= kClockDivisionCount) divIdx = kClockDivisionCount - 1;
+    clocks[idx].divIdx = divIdx;
+    clocks[idx].count  = 0; // reset counter to avoid stale state
+}
+
+uint8_t getClockDivisorIndex(uint8_t idx) {
+    if (idx >= 2) return 0;
+    return clocks[idx].divIdx;
+}
 
 static void setClockPulse(uint8_t idx, bool active) {
     uint8_t pin = (idx == 0) ? PIN_CLOCK_1 : PIN_CLOCK_2;
@@ -40,14 +57,11 @@ static void setLedPulse(bool active) {
 void handleClock() {
     if (!midi_playing) return;
 
-    clocks[0].count++;
-    if (clocks[0].count >= PPQN_CLOCK) {
-        setClockPulse(0, true);
-    }
-
-    clocks[1].count++;
-    if (clocks[1].count >= PPQN_CLOCK_2) {
-        setClockPulse(1, true);
+    for (uint8_t i = 0; i < 2; i++) {
+        clocks[i].count++;
+        if (clocks[i].count >= kClockDivisionTicks[clocks[i].divIdx]) {
+            setClockPulse(i, true);
+        }
     }
 
     led_clock.count++;

@@ -17,17 +17,9 @@ static const uint16_t CV_TABLE[121] = {
 
 // Clamp MIDI note to valid CV range (0-120)
 static uint8_t processNote(uint8_t note) {
+  if (note < 12) return 0; // notes below C0 clamp to 0V
   uint8_t val = note - 12; // MIDI note 12 = C0 = 0V
-
-  if (val < 0) {
-    return 0;
-  }
-
-  if (val > 120) {
-    return 120;
-  }
-
-  return val;
+  return (val > 120) ? 120 : val;
 }
 
 // Write 12-bit value to MCP4822 DAC via SPI
@@ -37,17 +29,15 @@ static void setVoltage(uint8_t dac_pin, bool channel, uint16_t mV) {
   command |= 0x2000; // Gain 2x
   command |= (mV & 0x0FFF);
 
-  SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
   digitalWrite(dac_pin, LOW);
-  SPI.transfer(command >> 8);
-  SPI.transfer(command & 0xFF);
+  SPI.transfer16(command);
   digitalWrite(dac_pin, HIGH);
-  SPI.endTransaction();
 }
 
 void dac_init() {
   SPI.setRX(255); // don't claim any pin for MISO (not needed)
   SPI.begin();
+  SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
 }
 
 void commandNote(uint8_t dac_pin, uint8_t pitch) {
