@@ -9,20 +9,31 @@ struct ClockState {
 
 static bool midi_playing = false;
 static ClockState clocks[2];
+static ClockState led_clock;
 
 static void setClockPulse(uint8_t idx, bool active) {
     uint8_t pin = (idx == 0) ? PIN_CLOCK_1 : PIN_CLOCK_2;
 
     if (active) {
         digitalWrite(pin, HIGH);
-        if (idx == 0) digitalWrite(PIN_CLOCK_LED, HIGH);
         clocks[idx].pulse_start = micros();
         clocks[idx].pulse = true;
         clocks[idx].count = 0;
     } else {
         digitalWrite(pin, LOW);
-        if (idx == 0) digitalWrite(PIN_CLOCK_LED, LOW);
         clocks[idx].pulse = false;
+    }
+}
+
+static void setLedPulse(bool active) {
+    if (active) {
+        digitalWrite(PIN_CLOCK_LED, HIGH);
+        led_clock.pulse_start = micros();
+        led_clock.pulse = true;
+        led_clock.count = 0;
+    } else {
+        digitalWrite(PIN_CLOCK_LED, LOW);
+        led_clock.pulse = false;
     }
 }
 
@@ -38,18 +49,25 @@ void handleClock() {
     if (clocks[1].count >= PPQN_CLOCK_2) {
         setClockPulse(1, true);
     }
+
+    led_clock.count++;
+    if (led_clock.count >= PPQN_CLOCK_LED) {
+        setLedPulse(true);
+    }
 }
 
 void handleStartAndContinue() {
     midi_playing = true;
     setClockPulse(0, true);
     setClockPulse(1, true);
+    setLedPulse(true);
 }
 
 void handleStop() {
     midi_playing = false;
     setClockPulse(0, false);
     setClockPulse(1, false);
+    setLedPulse(false);
 }
 
 void updateClock() {
@@ -57,5 +75,8 @@ void updateClock() {
         if (clocks[i].pulse && (micros() - clocks[i].pulse_start > CLOCK_PULSE_WIDTH_US)) {
             setClockPulse(i, false);
         }
+    }
+    if (led_clock.pulse && (micros() - led_clock.pulse_start > CLOCK_PULSE_WIDTH_US)) {
+        setLedPulse(false);
     }
 }

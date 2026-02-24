@@ -2,8 +2,8 @@
 #define CONFIG_H
 
 // --- LED Pins ---
-#define PIN_MIDI_LED   14
-#define PIN_CLOCK_LED  15
+#define PIN_MIDI_LED 14
+#define PIN_CLOCK_LED 15
 #define PIN_GATE_LED_1 16
 #define PIN_GATE_LED_2 17
 #define PIN_GATE_LED_3 20
@@ -16,12 +16,12 @@
 #define PIN_DAC4 5
 
 // --- Gate / Control Output Pins ---
-#define PIN_GATE_1   6
-#define PIN_SLIDE_1  7
+#define PIN_GATE_1 6
+#define PIN_SLIDE_1 7
 #define PIN_ACCENT_1 8
-#define PIN_GATE_2   22
-#define PIN_GATE_3   10
-#define PIN_GATE_4   11
+#define PIN_GATE_2 22
+#define PIN_GATE_3 10
+#define PIN_GATE_4 11
 
 // --- Clock Output Pins ---
 #define PIN_CLOCK_1 12
@@ -37,8 +37,9 @@
 #define CC_1 70
 
 // --- Clock Settings ---
-#define PPQN_CLOCK           24    // Quarter note resolution (24 PPQN)
-#define PPQN_CLOCK_2         6     // 1/16th note resolution
+#define PPQN_CLOCK 6      // 1/16th note resolution (standard eurorack clock)
+#define PPQN_CLOCK_2 24   // 1/4 note resolution
+#define PPQN_CLOCK_LED 24 // 1/4 note resolution for clock LED visual feedback
 #define CLOCK_PULSE_WIDTH_US 10000 // 10ms pulse width
 
 // --- Accent Velocity Threshold ---
