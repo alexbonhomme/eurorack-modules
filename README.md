@@ -10,17 +10,17 @@ This repository contains multiple standalone module projects. Each module lives 
 
 ### Pico-based (RP2040 / PlatformIO)
 
-- **[Pico Scope](pico_scope/)** — Dual-channel oscilloscope. Raspberry Pi Pico + SH1106 128×64 display (SPI/I2C), U8g2. Two ADC inputs, time/div and volts/div pots. Eurorack power.
-- **[Pico Drum](pico_drum/)** — Sample-playback drum voice. RP2040 Zero (or Pico), gate + pitch + decay CV, PWM audio out.
-- **[Pico MIDI](pico_midi/)** — MIDI to CV. 4× 1V/oct CV/gate (MCP4822), clock outputs, accent/slide on channel 1. Pico or Pico 2.
+- **[Pico Scope](pico_scope/)** — Dual-channel scope, Pico + SH1106, time/volts per div.
+- **[Pico Drum](pico_drum/)** — Sample drum voice; gate, pitch, decay CV; PWM out.
+- **[Pico MIDI](pico_midi/)** — MIDI to CV; 4× CV/gate, clocks, accent/slide on ch1.
 
 ### Other
 
-- **[LFO/VCO](vco_lfo/)** — Arduino UNO + AD9833.
-- **[VCO3](vco3/)** — Teensy + Audio Library.
-- **[Saturator](saturator/)** — LED-based soft clipping.
-- **[Stereo Filters](stereo_filters/)** — Daisy Seed.
-- **[MS20 Low Pass Filter](ms20_lpf/)** — WIP.
+- **[VCO/LFO](vco_lfo/)** — Arduino UNO + AD9833; sine/tri/square, 1V/oct.
+- **[VCO3](vco3/)** — Triple VCO + envelope; Teensy + Audio Library.
+- **[Saturator](saturator/)** — LED soft clipping + Baxandall tone (analog).
+- **[Stereo Filters](stereo_filters/)** — Daisy Seed; stereo ladder filters.
+- **[MS20 LPF](ms20_lpf/)** — MS20-style VCF (analog, WIP).
 
 ## Build (PlatformIO modules)
 
