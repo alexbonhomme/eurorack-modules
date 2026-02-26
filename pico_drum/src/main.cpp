@@ -3,7 +3,7 @@
 #include "sample_data.h"
 
 const int AUDIO_PIN = 6;
-const int GATE_PIN = 1;
+const int GATE_PIN = 0;
 const int PITCH_PIN = A0;
 const int DECAY_PIN = A1;
 const uint32_t SAMPLE_RATE_HZ = 44100;

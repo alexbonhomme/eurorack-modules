@@ -1,1 +1,32 @@
-.vscode
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+*.sconsign*.dblite
+
+# Build artifacts
+*.o
+*.a
+*.elf
+*.bin
+*.hex
+*.uf2
+*.map
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies (optional; uncomment if you don't want to track libs)
+# lib/
+
+# Debug / logs
+*.log
+*.tmp
